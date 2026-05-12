@@ -24,12 +24,8 @@ function setup() {
   // 使用全螢幕畫布，解決手機畫面限制問題
   createCanvas(windowWidth, windowHeight);
 
-  // 啟動攝影機，並設定前置鏡頭為優先 (對手機較友善)
-  let constraints = {
-    video: { facingMode: "user" },
-    audio: false
-  };
-  video = createCapture(constraints);
+  // 啟動攝影機，改回最單純的 VIDEO，避免部分電腦或手機因找不到 specific 的鏡頭而報錯 (NotFoundError)
+  video = createCapture(VIDEO);
   video.hide();
 
   // 開始對 video 進行連續偵測，並將結果傳給 gotFaces 函式
