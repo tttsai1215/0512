@@ -5,13 +5,10 @@ let handPose; // ml5 handPose 模型
 let hands = []; // 存放手部偵測結果
 let earringImgs = []; // 存放五款耳環圖片
 let currentEarring = 0; // 目前選中的耳環索引 (0~4)
+let modelsLoaded = 0; // 追蹤模型載入狀態
 
-// 在 preload 中載入模型，確保載入完成才啟動
+// 在 preload 中只載入圖片，確保載入完成才啟動
 function preload() {
-  // 注意：v1.3.1 中 M 必須大寫
-  faceMesh = ml5.faceMesh();
-  // 載入手勢模型
-  handPose = ml5.handPose();
   // 載入自訂的 5 款耳環圖片
   earringImgs[0] = loadImage('pic/acc/acc1_ring.png');
   earringImgs[1] = loadImage('pic/acc/acc2_pearl.png');
@@ -28,9 +25,19 @@ function setup() {
   video = createCapture(VIDEO);
   video.hide();
 
-  // 開始對 video 進行連續偵測，並將結果傳給 gotFaces 函式
-  faceMesh.detectStart(video, gotFaces);
-  handPose.detectStart(video, gotHands);
+  // 將模型載入移到 setup 中，避免 p5.js 的預設 Loading 畫面卡死手機
+  faceMesh = ml5.faceMesh({ maxFaces: 1 }, modelReady);
+  handPose = ml5.handPose({ maxHands: 1 }, modelReady);
+}
+
+// 當任一模型載入完成時呼叫
+function modelReady() {
+  modelsLoaded++;
+  if (modelsLoaded === 2) {
+    // 兩個模型都載入完成後，才開始進行影像偵測
+    faceMesh.detectStart(video, gotFaces);
+    handPose.detectStart(video, gotHands);
+  }
 }
 
 function gotFaces(results) {
@@ -79,6 +86,17 @@ function countFingers(hand) {
 
 function draw() {
   background('#e7c6ff'); // 淡紫色背景
+
+  // 若模型尚未載入完成，顯示自訂的載入提示
+  if (modelsLoaded < 2) {
+    fill(255);
+    stroke(0);
+    strokeWeight(3);
+    textAlign(CENTER, CENTER);
+    textSize(28);
+    text("AI 模型載入中...\n請稍候 (手機需時較長)", width / 2, height / 2);
+    return; // 終止後續的繪製
+  }
 
   // 檢查目前的手勢，並更新選擇的耳環
   checkHandGesture();
