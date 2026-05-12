@@ -9,11 +9,15 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(800, 680);
+  // 使用全螢幕畫布，解決手機畫面限制問題
+  createCanvas(windowWidth, windowHeight);
 
-  // 啟動攝影機
-  video = createCapture(VIDEO);
-  video.size(640, 480);
+  // 啟動攝影機，並設定前置鏡頭為優先 (對手機較友善)
+  let constraints = {
+    video: { facingMode: "user" },
+    audio: false
+  };
+  video = createCapture(constraints);
   video.hide();
 
   // 開始對 video 進行連續偵測，並將結果傳給 gotFaces 函式
@@ -36,23 +40,34 @@ function draw() {
   textSize(24);
   text("作品為影像辨識_耳環臉譜", width / 2, 90);
 
-  // 計算攝影機影像置中的位置
-  let vidW = 640;
-  let vidH = 480;
-  let vidX = (width - vidW) / 2;
-  let vidY = 140;
+  // 確保攝影機有抓到畫面
+  if (video.width > 0) {
+    let vW = video.width;
+    let vH = video.height;
 
-  push();
-  // 將影像放置於文字下方並做鏡像翻轉
-  translate(vidX + vidW, vidY);
-  scale(-1, 1);
-  
-  // 畫出影像
-  image(video, 0, 0, vidW, vidH);
+    // 計算縮放比例，讓影像能夠符合當前畫布並保留上方文字空間
+    let scaleFactor = min(width / vW, (height - 140) / vH) * 0.95;
+    
+    // 計算置中的 X 與 Y 座標
+    let vidW = vW * scaleFactor;
+    let vidX = (width - vidW) / 2;
+    let vidY = 140;
 
-  // 畫出耳環
-  drawEarrings();
-  pop();
+    push();
+    // 移動到畫布正確的 X, Y (因為後續會水平翻轉，X 需加上圖片顯示寬度)
+    translate(vidX + vidW, vidY);
+    // 水平翻轉
+    scale(-1, 1);
+    // 依據計算出的比例縮放，這樣特徵點跟影像的比例就會完全吻合
+    scale(scaleFactor, scaleFactor);
+    
+    // 畫出影像 (因為有 scale，這裡的寬高直接用原始的 vW 和 vH 即可)
+    image(video, 0, 0, vW, vH);
+
+    // 畫出耳環
+    drawEarrings();
+    pop();
+  }
 }
 
 function drawEarrings() {
@@ -85,4 +100,9 @@ function drawThreeCircles(baseX, baseY, offset, radius) {
   ellipse(baseX, startY, radius * 2);
   ellipse(baseX, startY + offset, radius * 2);
   ellipse(baseX, startY + offset * 2, radius * 2);
+}
+
+// 當視窗大小改變 (如手機旋轉) 時，自動調整畫布大小
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
