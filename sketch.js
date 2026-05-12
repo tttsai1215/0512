@@ -22,30 +22,32 @@ function setup() {
   
   // 取得攝影機影像並隱藏原本預設的 HTML 影片元素
   // 若發生 NotFoundError，表示找不到攝影機或是瀏覽器權限/連線安全 (https 或 localhost) 的問題
-  video = createCapture(VIDEO, () => {
-    // 將 AI 模型載入移至 setup，並在攝影機準備好後非同步載入，這樣才能看到自訂的 Loading 進度條
-    facemesh = ml5.faceMesh({ maxFaces: 1 }, () => {
-      // 當模型載入並準備好後，開始進行臉部辨識
-      facemesh.detectStart(video, results => {
-        isDetecting = true; // 成功收到回呼，表示模型已經開始運作
-        predictions = results;
-      });
-    });
-    
-    handPose = ml5.handPose(() => {
-      // 開始進行手勢辨識
-      handPose.detectStart(video, results => {
-        handPredictions = results;
-      });
+  video = createCapture(VIDEO);
+  video.hide();
+
+  // 獨立啟動模型：避免因為攝影機找不到 (NotFoundError) 導致模型永遠不載入
+  facemesh = ml5.faceMesh({ maxFaces: 1 }, () => {
+    // 當模型載入並準備好後，開始進行臉部辨識
+    facemesh.detectStart(video, results => {
+      isDetecting = true; // 成功收到回呼，表示模型已經開始運作
+      predictions = results;
     });
   });
-  video.hide();
+  
+  handPose = ml5.handPose(() => {
+    // 開始進行手勢辨識
+    handPose.detectStart(video, results => {
+      handPredictions = results;
+    });
+  });
 }
 
 function draw() {
   // 設定背景顏色為 e7c6ff
   background('#e7c6ff');
   
+  let fingers = 0; // 記錄這回合偵測到的手指數
+
   push();
   translate(width / 2, height / 2); // 將座標原點移到畫布中央
   scale(-1, 1); // X 軸縮放 -1，達成左右顛倒效果
@@ -54,9 +56,20 @@ function draw() {
 
   // 判斷手勢並切換耳環
   if (handPredictions.length > 0) {
-    let fingers = countFingers(handPredictions[0]);
+    fingers = countFingers(handPredictions[0]);
     if (fingers >= 1 && fingers <= 5) {
       currentEarringIndex = fingers;
+    }
+
+    // 【除錯輔助】繪製手部骨架，確認 AI 有成功抓到您的手
+    let hand = handPredictions[0];
+    for (let i = 0; i < hand.keypoints.length; i++) {
+      let kp = hand.keypoints[i];
+      let kx = map(kp.x, 0, video.width, -width * 0.25, width * 0.25);
+      let ky = map(kp.y, 0, video.height, -height * 0.25, height * 0.25);
+      fill(0, 255, 0);
+      noStroke();
+      circle(kx, ky, 8);
     }
   }
 
@@ -78,7 +91,8 @@ function draw() {
   fill(0); // 設定文字顏色為黑色
   textSize(32); // 設定文字大小
   textAlign(CENTER, TOP); // 對齊畫布中央上方
-  text("414730373", width / 2, 20); // 畫出文字，Y 座標為 20
+  // 將偵測到的手指數量顯示在畫面上，方便測試
+  text("414730373 | 偵測手指: " + fingers + " | 款式: " + currentEarringIndex, width / 2, 20);
 
   // 在畫面下方顯示載入進度條或提示文字
   if (!isDetecting) {
@@ -151,7 +165,7 @@ function countFingers(hand) {
   // 判斷大拇指 (利用指尖與食指根部的距離，大於大拇指根部與食指根部的距離)
   let dThumbTip = dist(keypoints[4].x, keypoints[4].y, keypoints[5].x, keypoints[5].y);
   let dThumbBase = dist(keypoints[2].x, keypoints[2].y, keypoints[5].x, keypoints[5].y);
-  if (dThumbTip > dThumbBase * 1.2) count++;
+  if (dThumbTip > dThumbBase * 1.1) count++; // 稍微調低閾值，讓大拇指更好偵測
   
   return count;
 }
