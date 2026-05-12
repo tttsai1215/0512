@@ -23,6 +23,15 @@ function draw() {
   // 設定背景顏色
   background('#e7c6ff');
   
+  // 繪製置中上方的文字
+  fill(50);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textSize(32);
+  text("414730134 蔡忞序", width / 2, 50);
+  textSize(24);
+  text("作品為影像辨識_耳環臉譜", width / 2, 90);
+
   // 將影像顯示在畫布正中間，並設定寬高為畫布的 50%，同時進行左右顛倒
   push();
   translate(width / 2, height / 2); // 將原點移至畫布中心
