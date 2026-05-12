@@ -7,17 +7,6 @@ let earringImgs = []; // 存放五款耳環圖片
 let currentEarring = 0; // 目前選中的耳環索引 (0~4)
 let modelsLoaded = 0; // 追蹤模型載入狀態
 
-// 在 preload 中只載入圖片，確保載入完成才啟動
-function preload() {
-  // 載入自訂的 5 款耳環圖片，並加入防呆機制 () => {} 避免找不到檔案時程式卡死
-  // 路徑改為直接讀取 pic/ 目錄
-  earringImgs[0] = loadImage('pic/acc1_ring.png', () => {}, () => {});
-  earringImgs[1] = loadImage('pic/acc2_pearl.png', () => {}, () => {});
-  earringImgs[2] = loadImage('pic/acc3_tassel.png', () => {}, () => {});
-  earringImgs[3] = loadImage('pic/acc4_jade.png', () => {}, () => {});
-  earringImgs[4] = loadImage('pic/acc5_phoenix.png', () => {}, () => {});
-}
-
 function setup() {
   // 使用全螢幕畫布，解決手機畫面限制問題
   createCanvas(windowWidth, windowHeight);
@@ -25,6 +14,13 @@ function setup() {
   // 啟動攝影機，改回最單純的 VIDEO，避免部分電腦或手機因找不到 specific 的鏡頭而報錯 (NotFoundError)
   video = createCapture(VIDEO);
   video.hide();
+
+  // 將圖片載入移至 setup 中，徹底解決 p5.js 找不到圖片會卡死畫面的問題
+  earringImgs[0] = loadImage('pic/acc/acc1_ring.png', () => {}, () => {});
+  earringImgs[1] = loadImage('pic/acc/acc2_pearl.png', () => {}, () => {});
+  earringImgs[2] = loadImage('pic/acc/acc3_tassel.png', () => {}, () => {});
+  earringImgs[3] = loadImage('pic/acc/acc4_jade.png', () => {}, () => {});
+  earringImgs[4] = loadImage('pic/acc/acc5_phoenix.png', () => {}, () => {});
 
   // 將模型載入移到 setup 中，避免 p5.js 的預設 Loading 畫面卡死手機
   faceMesh = ml5.faceMesh({ maxFaces: 1 }, modelReady);
