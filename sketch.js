@@ -31,27 +31,19 @@ function gotFaces(results) {
 function draw() {
   background('#e7c6ff'); // 淡紫色背景
 
-  // 繪製上方的文字
-  fill(50);
-  noStroke();
-  textAlign(CENTER, CENTER);
-  textSize(32);
-  text("414730134 蔡忞序", width / 2, 45);
-  textSize(24);
-  text("作品為影像辨識_耳環臉譜", width / 2, 90);
-
   // 確保攝影機有抓到畫面
   if (video.width > 0) {
     let vW = video.width;
     let vH = video.height;
 
-    // 計算縮放比例，讓影像能夠符合當前畫布並保留上方文字空間
-    let scaleFactor = min(width / vW, (height - 140) / vH) * 0.95;
+    // 計算縮放比例，改為 max 以填滿整個螢幕 (Cover 效果)
+    let scaleFactor = max(width / vW, height / vH);
     
     // 計算置中的 X 與 Y 座標
     let vidW = vW * scaleFactor;
+    let vidH = vH * scaleFactor;
     let vidX = (width - vidW) / 2;
-    let vidY = 140;
+    let vidY = (height - vidH) / 2;
 
     push();
     // 移動到畫布正確的 X, Y (因為後續會水平翻轉，X 需加上圖片顯示寬度)
@@ -68,6 +60,16 @@ function draw() {
     drawEarrings();
     pop();
   }
+
+  // 繪製上方的文字 (移至影像上方繪製，避免被全螢幕影像遮擋)
+  fill(255); // 為了在影像上更明顯，改為白色
+  stroke(0); // 加上黑邊
+  strokeWeight(3);
+  textAlign(CENTER, CENTER);
+  textSize(32);
+  text("414730134 蔡忞序", width / 2, 45);
+  textSize(24);
+  text("作品為影像辨識_耳環臉譜", width / 2, 90);
 }
 
 function drawEarrings() {
