@@ -79,30 +79,51 @@ function drawEarrings() {
 
     fill(255, 204, 0); // 黃色
     noStroke();
-    const earlobeOffset = 18; // 耳環圓圈間距
-    const circleRadius = 7;  // 耳環圓圈大小
 
-    // FaceMesh 提供 468 個臉部特徵點。
-    // 索引 132 與 361 約略位於左右耳垂/臉頰邊緣的位置
-    let rightEar = face.keypoints[132];
-    if (rightEar) {
-      drawThreeCircles(rightEar.x, rightEar.y, earlobeOffset, circleRadius);
-    }
+    // FaceMesh 提供的特徵點中：
+    // 10 是額頭最高點，152 是下巴最底點
+    // 234 和 454 是臉部最左和最右側邊緣（最靠近耳朵的位置）
+    let faceTop = face.keypoints[10];
+    let faceBottom = face.keypoints[152];
+    let rightSide = face.keypoints[234];
+    let leftSide = face.keypoints[454];
 
-    let leftEar = face.keypoints[361];
-    if (leftEar) {
-      drawThreeCircles(leftEar.x, leftEar.y, earlobeOffset, circleRadius);
+    if (faceTop && faceBottom && rightSide && leftSide) {
+      // 計算臉部實際高度，用來動態調整比例，解決不同設備解析度下的位置偏移問題
+      let faceHeight = dist(faceTop.x, faceTop.y, faceBottom.x, faceBottom.y);
+      
+      // 計算臉部的垂直向量 (額頭往下巴的方向)
+      let faceDownX = (faceBottom.x - faceTop.x) / faceHeight;
+      let faceDownY = (faceBottom.y - faceTop.y) / faceHeight;
+
+      // 根據臉部大小動態設定耳環大小與間距
+      let circleRadius = faceHeight * 0.035; 
+      let earlobeOffset = circleRadius * 2.5; 
+
+      // 計算耳垂位置：從耳朵邊緣點順著臉部方向往下推移約 12% 臉高
+      let dropDistance = faceHeight * 0.12; 
+      
+      // 繪製右耳環 (在畫面上看起來會在左側)
+      let rightEarlobeX = rightSide.x + faceDownX * dropDistance;
+      let rightEarlobeY = rightSide.y + faceDownY * dropDistance;
+      drawThreeCircles(rightEarlobeX, rightEarlobeY, earlobeOffset, circleRadius);
+
+      // 繪製左耳環 (在畫面上看起來會在右側)
+      let leftEarlobeX = leftSide.x + faceDownX * dropDistance;
+      let leftEarlobeY = leftSide.y + faceDownY * dropDistance;
+      drawThreeCircles(leftEarlobeX, leftEarlobeY, earlobeOffset, circleRadius);
     }
   }
 }
 
 // 輔助函式：畫出三個連串的圓圈
 function drawThreeCircles(baseX, baseY, offset, radius) {
-  let startY = baseY + 10; // 稍微往下移一點，更像耳垂下方
-  ellipse(baseX, startY, radius * 2);
-  ellipse(baseX, startY + offset, radius * 2);
-  ellipse(baseX, startY + offset * 2, radius * 2);
+  // 將第一個圓直接畫在計算好的耳垂位置上，接下來依序垂直往下
+  ellipse(baseX, baseY, radius * 2);
+  ellipse(baseX, baseY + offset, radius * 2);
+  ellipse(baseX, baseY + offset * 2, radius * 2);
 }
+
 
 // 當視窗大小改變 (如手機旋轉) 時，自動調整畫布大小
 function windowResized() {
