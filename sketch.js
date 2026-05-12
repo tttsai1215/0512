@@ -9,12 +9,13 @@ let modelsLoaded = 0; // 追蹤模型載入狀態
 
 // 在 preload 中只載入圖片，確保載入完成才啟動
 function preload() {
-  // 載入自訂的 5 款耳環圖片
-  earringImgs[0] = loadImage('pic/acc/acc1_ring.png');
-  earringImgs[1] = loadImage('pic/acc/acc2_pearl.png');
-  earringImgs[2] = loadImage('pic/acc/acc3_tassel.png');
-  earringImgs[3] = loadImage('pic/acc/acc4_jade.png');
-  earringImgs[4] = loadImage('pic/acc/acc5_phoenix.png');
+  // 載入自訂的 5 款耳環圖片，並加入防呆機制 () => {} 避免找不到檔案時程式卡死
+  // 路徑改為直接讀取 pic/ 目錄
+  earringImgs[0] = loadImage('pic/acc1_ring.png', () => {}, () => {});
+  earringImgs[1] = loadImage('pic/acc2_pearl.png', () => {}, () => {});
+  earringImgs[2] = loadImage('pic/acc3_tassel.png', () => {}, () => {});
+  earringImgs[3] = loadImage('pic/acc4_jade.png', () => {}, () => {});
+  earringImgs[4] = loadImage('pic/acc5_phoenix.png', () => {}, () => {});
 }
 
 function setup() {
